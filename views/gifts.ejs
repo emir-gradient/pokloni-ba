@@ -12,7 +12,7 @@
             <div><img src="<%=gift.imageUrl%>" alt="Image"></div>
             <div><p><%=gift.description%></p></div>
             <div>
-                <a href="/edit-gift/<%=gift._id%>?editing=true">Edit</a>
+                <a href="/edit-gift/<%=gift._id%>?editing=true">Uredi</a>
                 <form action="/delete-gift" method="post">
                     <input type="hidden" name="giftId" value="<%=gift._id%>">
                     <input type="submit" value="Ukloni">
