@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(mainRoutes);
 app.use(errorController);
-mongoConnect(() => {
+mongoConnect(() => {}).then(() => {
   app.listen(3000);
   console.log('Connected');
 });

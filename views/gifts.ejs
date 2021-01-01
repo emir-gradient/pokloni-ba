@@ -1,0 +1,26 @@
+<%-include('./includes/head.ejs') %>
+  </head>
+  <body>
+      <h1 class="title">Pokloni: </h1>
+    <%-include('./includes/navigation.ejs') %>
+    <% if(gifts.length > 0) {%>
+    <% gifts.forEach(gift => { %>
+        <article>
+            <div>
+                <p><%=gift.title%></p>
+            </div>
+            <div><img src="<%=gift.imageUrl%>" alt="Image"></div>
+            <div><p><%=gift.description%></p></div>
+            <div>
+                <a href="/edit-gift/<%=gift._id%>?editing=true">Edit</a>
+                <form action="/delete-gift" method="post">
+                    <input type="hidden" name="giftId" value="<%=gift._id%>">
+                    <input type="submit" value="Ukloni">
+                </form>
+            </div>
+        </article>
+    <%}) %>
+    <%}else{%>
+        <h1 class="title">No gifts found!</h1>
+    <%}%>
+    <%-include('./includes/end.ejs') %>

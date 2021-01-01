@@ -1,0 +1,17 @@
+<%-include('./includes/head.ejs') %>
+  </head>
+  <body>
+    <h1 class="title">
+      Dodajte poklon
+    </h1>
+    <%-include('./includes/navigation.ejs') %>
+    <form action="/<% if(editing) {%>edit-gift<%}else{%>add-gift<%}%>" method="POST">
+      <input type="text" name="title" placeholder="Naziv poklona:" value="<% if (editing) { %><%= gift.title %><% } %>">
+      <input type="text" name="imageUrl" placeholder="Slika (URL):" value="<% if (editing) { %><%= gift.imageUrl %><% } %>">
+      <input type="text" name="description" placeholder="Opis: " value="<% if (editing) { %><%= gift.description %><% } %>">
+      <input type="submit" value="Dodaj">
+      <% if(editing) {%>
+        <input type="hidden" name="giftId" value="<%=gift._id%>">
+        <%}%>
+    </form>
+<%-include('./includes/end.ejs') %>
