@@ -18,18 +18,6 @@ class Gift {
       })
       .catch(err => console.log(err));
   }
-  static findById(id) {
-    let db = getDb();
-    return db
-      .collection('pokloni')
-      .find({ _id: new mongodb.ObjectId(id) })
-      .next()
-      .then(gift => {
-        console.log('Gift fetched');
-        return gift;
-      })
-      .catch(err => console.log(err));
-  }
   update() {
     let db = getDb();
     if (this._id) {
@@ -41,6 +29,18 @@ class Gift {
     } else {
       throw 'No such gift exists!';
     }
+  }
+  static findById(id) {
+    let db = getDb();
+    return db
+      .collection('pokloni')
+      .find({ _id: new mongodb.ObjectId(id) })
+      .next()
+      .then(gift => {
+        console.log('Gift fetched');
+        return gift;
+      })
+      .catch(err => console.log(err));
   }
   static fetchAll() {
     let db = getDb();

@@ -1,7 +1,26 @@
 const Gift = require('../models/gift');
 exports.landingPage = (req, res, next) => {
   res.render('index', {
-    pageTitle: 'Poklanjam.ba'
+    pageTitle: 'Pokloni.ba',
+    path: '/'
+  });
+};
+
+exports.getGifts = (req, res, next) => {
+  Gift.fetchAll().then(gifts => {
+    res.render('gifts', {
+      pageTitle: 'Pokloni.ba | Lista poklona',
+      gifts: gifts,
+      path: '/gifts'
+    });
+  });
+};
+
+exports.getAddGift = (req, res, next) => {
+  res.render('edit-gift', {
+    pageTitle: 'Pokloni.ba | Dodaj poklon',
+    editing: false,
+    path: '/add-gift'
   });
 };
 
@@ -15,11 +34,22 @@ exports.postAddGift = (req, res, next) => {
   });
 };
 
-exports.getAddGift = (req, res, next) => {
-  res.render('edit-gift', {
-    pageTitle: 'Dodaj poklon',
-    editing: false
-  });
+exports.getEditGift = (req, res, next) => {
+  const editing = req.query.editing;
+  if (editing) {
+    Gift.findById(req.params.giftId)
+      .then(gift => {
+        res.render('edit-gift', {
+          pageTitle: 'Pokloni.ba | Uredi poklon',
+          gift: gift,
+          editing: true,
+          path: '/edit-gift'
+        });
+      })
+      .catch(err => console.log(err));
+  } else if (!editing) {
+    res.redirect('/');
+  }
 };
 
 exports.postEditGift = (req, res, next) => {
@@ -32,23 +62,6 @@ exports.postEditGift = (req, res, next) => {
   res.redirect('/gifts');
 };
 
-exports.getEditGift = (req, res, next) => {
-  const editing = req.query.editing;
-  if (editing) {
-    Gift.findById(req.params.giftId)
-      .then(gift => {
-        res.render('edit-gift', {
-          pageTitle: 'Uredi poklon',
-          gift: gift,
-          editing: true
-        });
-      })
-      .catch(err => console.log(err));
-  } else if (!editing) {
-    res.redirect('/');
-  }
-};
-
 exports.postDeleteGift = (req, res, next) => {
   const giftId = req.body.giftId;
   Gift.deleteById(giftId)
@@ -57,13 +70,4 @@ exports.postDeleteGift = (req, res, next) => {
       res.redirect('/gifts');
     })
     .catch(err => console.log(err));
-};
-
-exports.getGifts = (req, res, next) => {
-  Gift.fetchAll().then(gifts => {
-    res.render('gifts', {
-      pageTitle: 'Pokloni',
-      gifts: gifts
-    });
-  });
 };
