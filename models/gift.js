@@ -23,7 +23,16 @@ class Gift {
     if (this._id) {
       return db
         .collection('pokloni')
-        .updateOne({ _id: this._id }, { $set: this })
+        .updateOne(
+          { _id: this._id },
+          {
+            $set: {
+              title: this.title,
+              imageUrl: this.imageUrl,
+              description: this.description
+            }
+          }
+        )
         .then(() => console.log('Updated'))
         .catch(err => console.log(err));
     } else {

@@ -2,14 +2,13 @@ const mongodb = require('mongodb');
 const MongoClient = mongodb.MongoClient;
 
 let _db;
-const mongoConnect = callback => {
+const mongoConnect = () => {
   return MongoClient.connect(
     'mongodb+srv://malik:pokloniba@pokloni.zso6v.mongodb.net/Pokloni?retryWrites=true&w=majority'
   )
     .then(client => {
       console.log(client);
       _db = client.db();
-      callback();
     })
     .catch(err => {
       console.log(err);

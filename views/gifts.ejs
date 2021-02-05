@@ -12,8 +12,8 @@
             <div class="gift-card-img"><img src="<%=gift.imageUrl%>" alt="Image"></div>
             <div class="gift-card-desc"><p><%=gift.description%></p></div>
             <div>
-                <a class="btn" href="/edit-gift/<%=gift._id%>?editing=true">Uredi</a>
-                <form action="/delete-gift" method="post">
+                <a class="btn" href="/gifts/edit-gift/<%=gift._id%>?editing=true">Uredi</a>
+                <form action="/gifts/delete-gift" method="post">
                     <input type="hidden" name="giftId" value="<%=gift._id%>">
                     <input class="btn" type="submit" value="Ukloni">
                 </form>

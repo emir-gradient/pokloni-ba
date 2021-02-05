@@ -1,17 +1,12 @@
 <header class="header">
   <h1 class="title">
-    <% if(path=="/") {%>Dobrodošli na pokloni.ba
-      <% }else if(path=="/gifts"){%> Pokloni
-      <% }else if(path=="/add-gift"){%> Dodaj poklon
-      <% }else if(path=="/edit-gift"){%> Uredi poklon
-      <% }else if(path=="error"){%> 404
-      <%}%>
+    <%= pageTitle.split('|')[1].trim() %>
   </h1>
 <nav class="nav-bar__header">
     <ul>
       <li><a href="/">Početna stranica<a></li>
-        <li><a href="/gifts">Lista poklona</a></li>
-        <li><a href="/add-gift">Dodaj poklon</a></li>
+        <li><a href="/gifts/list">Lista poklona</a></li>
+        <li><a href="/gifts/add-gift">Dodaj poklon</a></li>
     </ul>
 </nav>
 </header>
