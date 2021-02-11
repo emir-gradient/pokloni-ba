@@ -20,9 +20,11 @@ exports.getAddGift = (req, res, next) => {
 
 exports.postAddGift = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const description = req.body.description.toString().trim();
-  const gift = new Gift(title, imageUrl, description);
+  let gift;
+  if (!image) gift = new Gift(title, null, description);
+  else gift = new Gift(title, image.path, description);
   gift.save().then(() => {
     res.redirect('/gifts/list');
   });
@@ -49,11 +51,14 @@ exports.getEditGift = (req, res, next) => {
 exports.postEditGift = (req, res, next) => {
   const giftId = req.body.giftId;
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const imageUrl = req.file;
+  let gift;
   const description = req.body.description.toString().trim();
-  const gift = new Gift(title, imageUrl, description, giftId);
-  gift.update();
-  res.redirect('/gifts/list');
+  if (!imageUrl) gift = new Gift(title, null, description, giftId);
+  else gift = new Gift(title, imageUrl.path, description, giftId);
+  gift.update().then(() => {
+    res.redirect('/gifts/list');
+  });
 };
 
 exports.postDeleteGift = (req, res, next) => {
