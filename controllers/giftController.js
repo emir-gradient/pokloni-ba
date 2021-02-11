@@ -1,5 +1,7 @@
+const path = require('path');
 const Gift = require('../models/gift');
-
+const fs = require('fs');
+const { COPYFILE_FICLONE_FORCE } = require('constants');
 exports.getGifts = (req, res, next) => {
   Gift.fetchAll().then(gifts => {
     res.render('gifts', {
@@ -63,6 +65,14 @@ exports.postEditGift = (req, res, next) => {
 
 exports.postDeleteGift = (req, res, next) => {
   const giftId = req.body.giftId;
+  Gift.findById(giftId).then(gift => {
+    fs.unlink(
+      path.join(__dirname, '../', 'images', gift.imageUrl.split('\\')[1]),
+      err => {
+        console.log(err);
+      }
+    );
+  });
   Gift.deleteById(giftId)
     .then(() => {
       console.log('Gift deleted');
