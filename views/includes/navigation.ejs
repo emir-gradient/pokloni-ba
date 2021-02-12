@@ -7,6 +7,16 @@
       <li><a href="/">Početna stranica<a></li>
         <li><a href="/gifts/list">Lista poklona</a></li>
         <li><a href="/gifts/add-gift">Dodaj poklon</a></li>
+        <li><a href="/signup">Registruj se</a></li>
+        <%if(isAuthenticated){%>
+          <li>
+            <form action="/logout" method="post">
+              <input type="submit" value="Odjavi se">
+            </form>
+          </li>
+        <%}else{%>
+        <li><a href="/login">Uloguj se</a></li>
+        <%}%>
     </ul>
 </nav>
 </header>
