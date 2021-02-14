@@ -1,6 +1,4 @@
 UPDATE:
-- /gifts rout has been added and connected with gift controller
-- Image upload has been added
 - Added functionality from requirements document
 
 After opening the code run npm install to install all the required node modules.
