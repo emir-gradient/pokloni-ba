@@ -7,22 +7,25 @@ exports.getLogin = (req, res, next) => {
 };
 exports.postLogin = (req, res, next) => {
   let db = getDb();
-  db.collection('users')
+  return db
+    .collection('users')
     .findOne({ email: req.body.email })
     .then(user => {
       if (!user) {
         console.log('User with such email does not exist');
-        return res.redirect('/');
       }
       if (user.password.toString() === req.body.password.toString()) {
         req.session.user = user;
         req.session.isLoggedIn = true;
         console.log('You have succesfully logged in.');
-        return res.redirect('/');
       } else {
         console.log('Wrong password');
-        return res.redirect('/');
       }
+    })
+    .then(() => {
+      setTimeout(() => {
+        res.redirect('/');
+      }, 2000);
     });
 };
 

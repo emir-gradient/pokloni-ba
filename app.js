@@ -4,10 +4,12 @@ const path = require('path');
 const multer = require('multer');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
+const User = require('./models/user');
 
 const mainRoutes = require('./routes/main');
 const giftRoutes = require('./routes/gift');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const mongoConnect = require('./util/database').mongoConnect;
 const errorController = require('./controllers/404');
 const app = express();
@@ -57,8 +59,25 @@ app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
   next();
 });
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then(user => {
+      if (!user) {
+        return next();
+      }
+      req.user = user;
+      next();
+    })
+    .catch(err => {
+      next(new Error(err));
+    });
+});
 app.use(authRoutes);
 app.use('/gifts', giftRoutes);
+app.use('/admin', adminRoutes);
 app.use(mainRoutes);
 app.use(errorController);
 mongoConnect().then(() => {

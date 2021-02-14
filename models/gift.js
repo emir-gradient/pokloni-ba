@@ -2,11 +2,12 @@ const mongodb = require('mongodb');
 const getDb = require('../util/database').getDb;
 
 class Gift {
-  constructor(title, imageUrl, description, id) {
+  constructor(title, imageUrl, description, userId, id) {
     this.title = title;
     this.imageUrl = imageUrl;
     this.description = description;
     this._id = id ? new mongodb.ObjectId(id) : null;
+    this.userId = new mongodb.ObjectId(userId);
   }
   save() {
     let db = getDb();

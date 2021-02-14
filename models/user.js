@@ -5,6 +5,7 @@ class User {
   constructor(email, password) {
     this.email = email;
     this.password = password;
+    this.isAdmin = false;
   }
   save() {
     let db = getDb();
@@ -12,6 +13,14 @@ class User {
       .collection('users')
       .insertOne(this)
       .then(() => console.log('User has been added to the database.'))
+      .catch(err => console.log(err));
+  }
+  update() {
+    let db = getDb();
+    return db
+      .collection('users')
+      .updateOne({ email: this.email }, { $set: this })
+      .then(() => console.log('User has been updated.'))
       .catch(err => console.log(err));
   }
   static findById(id) {

@@ -2,7 +2,7 @@
   </head>
   <body>
     <%-include('./includes/navigation.ejs') %>
-    <% if(gifts.length > 0) {%>
+    <% if(gifts.length) {%>
     <main>
     <% gifts.forEach(gift => { %>
         <article class="gift-card clearfix">
@@ -12,7 +12,11 @@
             <div class="gift-card-img"><img src="/<%=gift.imageUrl%>" alt="Image"></div>
             <div class="gift-card-desc"><p><%=gift.description%></p></div>
             <div>
-                    <a class="btn" href="/gifts/order/<%=gift._id%>">Naruči</a>
+                <a class="btn" href="/gifts/edit-gift/<%=gift._id%>?editing=true">Uredi</a>
+                <form action="/gifts/delete-gift" method="post">
+                    <input type="hidden" name="giftId" value="<%=gift._id%>">
+                    <input class="btn" type="submit" value="Ukloni">
+                </form>
             </div>
         </article>
     <%}) %>
