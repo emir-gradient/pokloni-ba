@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const getDb = require('../util/database').getDb;
+const bcrypt = require('bcryptjs');
 exports.getLogin = (req, res, next) => {
   res.render('login', {
     pageTitle: 'Pokloni.ba | Uloguj se'
@@ -16,22 +17,25 @@ exports.postLogin = (req, res, next) => {
     .findOne({ email: req.body.email })
     .then(user => {
       if (!user) {
-        console.log('User with such email does not exist');
         let htmlCode =
           '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
         return res.send(htmlCode);
       }
-      if (user.password.toString() === req.body.password.toString()) {
-        req.session.user = user;
-        req.session.isLoggedIn = true;
-        let htmlCode =
-          '<html><head><title>Korisnik pronađen</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
-        return res.send(htmlCode);
-      } else {
+      bcrypt.compare(req.body.password, user.password).then(doMatch => {
+        if (doMatch) {
+          req.session.user = user;
+          req.session.isLoggedIn = true;
+          return req.session.save(err => {
+            console.log(err);
+            let htmlCode =
+              '<html><head><title>Korisnik pronađen</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
+            return res.send(htmlCode);
+          });
+        }
         let htmlCode =
           '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
         return res.send(htmlCode);
-      }
+      });
     });
 };
 
@@ -54,12 +58,17 @@ exports.getSignup = (req, res, next) => {
 exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = new User(email, password);
-  user
-    .save()
-    .then(() => {
-      console.log('User has signed up');
-      return res.redirect('/login');
+  return bcrypt
+    .hash(password, 12)
+    .then(hashedPassword => {
+      const user = new User(email, hashedPassword);
+      return user
+        .save()
+        .then(() => {
+          console.log('User has signed up');
+          return res.redirect('/login');
+        })
+        .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 };
