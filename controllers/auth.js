@@ -6,26 +6,32 @@ exports.getLogin = (req, res, next) => {
   });
 };
 exports.postLogin = (req, res, next) => {
+  if (!req.body.password) {
+    let htmlCode =
+      '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Upišite šifru.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
+    return res.send(htmlCode);
+  }
   let db = getDb();
-  return db
-    .collection('users')
+  db.collection('users')
     .findOne({ email: req.body.email })
     .then(user => {
       if (!user) {
         console.log('User with such email does not exist');
+        let htmlCode =
+          '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
+        return res.send(htmlCode);
       }
       if (user.password.toString() === req.body.password.toString()) {
         req.session.user = user;
         req.session.isLoggedIn = true;
-        console.log('You have succesfully logged in.');
+        let htmlCode =
+          '<html><head><title>Korisnik pronađen</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
+        return res.send(htmlCode);
       } else {
-        console.log('Wrong password');
+        let htmlCode =
+          '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
+        return res.send(htmlCode);
       }
-    })
-    .then(() => {
-      setTimeout(() => {
-        res.redirect('/');
-      }, 2000);
     });
 };
 
