@@ -70,24 +70,44 @@ exports.postEditGift = (req, res, next) => {
       req.session.user._id,
       giftId
     );
-  gift.update().then(() => {
-    res.redirect('/gifts/my-gifts');
-  });
+  Gift.findById(giftId)
+    .then(fetchedGift => {
+      if (
+        fetchedGift.userId.toString() == req.session.user._id.toString() ||
+        req.session.user.isAdmin
+      ) {
+        return gift.update();
+      } else {
+        return res.send('You can not edit this gift.');
+      }
+    })
+    .then(() => {
+      res.redirect('/gifts/my-gifts');
+    })
+    .catch(err => console.log(err));
 };
 
 exports.postDeleteGift = (req, res, next) => {
   const giftId = req.body.giftId;
-  Gift.findById(giftId).then(gift => {
-    if (gift.imageUrl) {
-      fs.unlink(
-        path.join(__dirname, '../', 'images', gift.imageUrl.split('\\')[1]),
-        err => {
-          console.log(err);
-        }
-      );
-    }
-  });
-  Gift.deleteById(giftId)
+  Gift.findById(giftId)
+    .then(gift => {
+      if (gift.imageUrl) {
+        fs.unlink(
+          path.join(__dirname, '../', 'images', gift.imageUrl.split('\\')[1]),
+          err => {
+            console.log(err);
+          }
+        );
+      }
+      if (
+        gift.userId.toString() === req.session.user._id.toString() ||
+        req.session.user.isAdmin
+      ) {
+        return Gift.deleteById(gift._id);
+      } else {
+        return res.send('This is not your gift nor youre an admin');
+      }
+    })
     .then(() => {
       console.log('Gift deleted');
       res.redirect('/gifts/list');
