@@ -13,6 +13,14 @@
             <div class="gift-card-desc"><p><%=gift.description%></p></div>
             <div>
                     <a class="btn" href="/gifts/order/<%=gift._id%>">Naruči</a>
+                    <%if(user.isAdmin){%>
+                        <span>Admin: </span>
+                <a class="btn" href="/gifts/edit-gift/<%=gift._id%>?editing=true">Uredi</a>
+                <form action="/gifts/delete-gift" method="post">
+                    <input type="hidden" name="giftId" value="<%=gift._id%>">
+                    <input class="btn" type="submit" value="Ukloni">
+                </form>
+                   <%}%>
             </div>
         </article>
     <%}) %>

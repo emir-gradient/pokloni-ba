@@ -4,12 +4,13 @@ const fs = require('fs');
 const getDb = require('../util/database').getDb;
 const mongodb = require('mongodb');
 exports.getGifts = (req, res, next) => {
-  console.log(req.session);
+  console.log(req.session.user);
   Gift.fetchAll().then(gifts => {
     res.render('gifts', {
       pageTitle: 'Pokloni.ba | Lista poklona',
       gifts: gifts,
-      path: '/gifts'
+      path: '/gifts',
+      user: req.session.user ? req.session.user : { isAdmin: false }
     });
   });
 };
