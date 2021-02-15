@@ -146,7 +146,7 @@ exports.getOrderGift = (req, res, next) => {
     .insertOne(order)
     .then(() => {
       let htmlCode =
-        '<html><head><title>Narudžba nije uspjela</title></head><body><h1 style="font-family: Arial;">Uspješno ste poslali narudžbu.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
+        '<html><head><title>Narudžba je uspjela</title></head><body><h1 style="font-family: Arial;">Uspješno ste poslali narudžbu.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
       return res.send(htmlCode);
     });
 };
