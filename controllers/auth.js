@@ -1,9 +1,9 @@
-const User = require('../models/user');
-const getDb = require('../util/database').getDb;
-const bcrypt = require('bcryptjs');
+const User = require("../models/user");
+const getDb = require("../util/database").getDb;
+const bcrypt = require("bcryptjs");
 exports.getLogin = (req, res, next) => {
-  res.render('login', {
-    pageTitle: 'Pokloni.ba | Uloguj se'
+  res.render("login", {
+    pageTitle: "Pokloni.ba | Uloguj se",
   });
 };
 exports.postLogin = (req, res, next) => {
@@ -13,19 +13,19 @@ exports.postLogin = (req, res, next) => {
     return res.send(htmlCode);
   }
   let db = getDb();
-  db.collection('users')
+  db.collection("users")
     .findOne({ email: req.body.email })
-    .then(user => {
+    .then((user) => {
       if (!user) {
         let htmlCode =
           '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
         return res.send(htmlCode);
       }
-      bcrypt.compare(req.body.password, user.password).then(doMatch => {
+      bcrypt.compare(req.body.password, user.password).then((doMatch) => {
         if (doMatch) {
           req.session.user = user;
           req.session.isLoggedIn = true;
-          return req.session.save(err => {
+          return req.session.save((err) => {
             console.log(err);
             let htmlCode =
               '<html><head><title>Korisnik pronađen</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
@@ -40,18 +40,18 @@ exports.postLogin = (req, res, next) => {
 };
 
 exports.postLogout = (req, res, next) => {
-  req.session.destroy(err => {
+  req.session.destroy((err) => {
     if (err) {
-      return res.send('Nema sesije');
+      return res.send("Nema sesije");
     }
-    console.log('Logged out');
-    res.redirect('/');
+    console.log("Logged out");
+    res.redirect("/");
   });
 };
 
 exports.getSignup = (req, res, next) => {
-  res.render('signup', {
-    pageTitle: 'Pokloni.ba | Registruj se'
+  res.render("signup", {
+    pageTitle: "Pokloni.ba | Registruj se",
   });
 };
 
@@ -60,15 +60,16 @@ exports.postSignup = (req, res, next) => {
   const password = req.body.password;
   return bcrypt
     .hash(password, 12)
-    .then(hashedPassword => {
+    .then((hashedPassword) => {
       const user = new User(email, hashedPassword);
       return user
         .save()
         .then(() => {
-          console.log('User has signed up');
-          return res.redirect('/login');
+          let htmlCode =
+            '<html><head><title>Uspješna prijava</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
+          return res.send(htmlCode);
         })
-        .catch(err => console.log(err));
+        .catch((err) => console.log(err));
     })
-    .catch(err => console.log(err));
+    .catch((err) => console.log(err));
 };
