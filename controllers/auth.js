@@ -1,85 +1,116 @@
+const adminService = require('../service/adminService');
 const User = require('../models/user');
-const getDb = require('../util/database').getDb;
 const bcrypt = require('bcryptjs');
 exports.getLogin = (req, res, next) => {
   res.render('login', {
-    pageTitle: 'Pokloni.ba | Uloguj se'
+    pageTitle: 'Pokloni.ba | Uloguj se',
+    error: false
   });
 };
-exports.postLogin = (req, res, next) => {
+exports.postLogin = async (req, res, next) => {
   if (!req.body.password) {
-    let htmlCode =
-      '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Upišite šifru.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
-    return res.send(htmlCode);
-  }
-  let db = getDb();
-  db.collection('users')
-    .findOne({ email: req.body.email })
-    .then(user => {
-      if (!user) {
-        let htmlCode =
-          '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
-        return res.send(htmlCode);
-      }
-      bcrypt.compare(req.body.password, user.password).then(doMatch => {
-        if (doMatch) {
-          req.session.user = user;
-          req.session.isLoggedIn = true;
-          return req.session.save(err => {
-            console.log(err);
-            let htmlCode =
-              '<html><head><title>Korisnik pronađen</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
-            return res.send(htmlCode);
-          });
-        }
-        let htmlCode =
-          '<html><head><title>Korisnik ne postoji</title></head><body><h1 style="font-family: Arial;">Korisnik sa upisanim emailom ili šifrom ne postoji.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
-        return res.send(htmlCode);
-      });
+    res.render('login', {
+      pageTitle: 'Pokloni.ba | Uloguj se',
+      error: true
     });
+  }
+  try {
+    const user = await adminService.getUserByEmail(req.body.email);
+    if (!user) {
+      return res.render('login', {
+        pageTitle: 'Pokloni.ba | Uloguj se',
+        error: true
+      });
+    }
+    const doMatch = await adminService.passwordsDoMatch(
+      req.body.password,
+      user.password
+    );
+    if (doMatch) {
+      req.session.user = user;
+      req.session.isLoggedIn = true;
+      return req.session.save(err => {
+        if (!err) {
+          res.redirect('/');
+        }
+        console.log(err);
+        return res.render('login', {
+          pageTitle: 'Pokloni.ba | Uloguj se',
+          error: true
+        });
+      });
+    } else {
+      return res.render('login', {
+        pageTitle: 'Pokloni.ba | Uloguj se',
+        error: true
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
 };
 
-exports.postLogout = (req, res, next) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.send('Nema sesije');
-    }
-    console.log('Logged out');
+exports.postLogout = async (req, res, next) => {
+  try {
+    await req.session.destroy();
     res.redirect('/');
-  });
+  } catch (err) {
+    console.log(err);
+    res.send('<h1>Nema sesije</h1>');
+  }
 };
 
 exports.getSignup = (req, res, next) => {
   res.render('signup', {
-    pageTitle: 'Pokloni.ba | Registruj se'
+    pageTitle: 'Pokloni.ba | Registruj se',
+    error: false
   });
 };
 
-exports.postSignup = (req, res, next) => {
+exports.postSignup = async (req, res, next) => {
+  const name = req.body.name;
+  const lastName = req.body.lastName;
   const email = req.body.email;
   const password = req.body.password;
-  let db = getDb();
-  db.collection('users')
-    .findOne({ email: email })
-    .then(user => {
-      if (user) {
-        let htmlCode =
-          '<html><head><title>Email zauzet</title></head><body><h1 style="font-family: Arial;">Upisani email je zauzet.<br> Molimo vas kliknite na ovaj <a href="/signup">Link</a> da se vratite na registraciju</h1>';
-        return res.send(htmlCode);
+  try {
+    const user = await adminService.getUserByEmail(req.body.email);
+    if (user) {
+      return res.render('signup', {
+        pageTitle: 'Pokloni.ba | Registruj se',
+        error: true
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+  try {
+    await adminService.createUser(name, lastName, email, password);
+    return res.redirect('/login');
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+exports.getMyProfile = (req, res, next) => {
+  res.render('profil', {
+    pageTitle: 'Pokloni.ba | Moj profil',
+    image: null
+  });
+};
+
+exports.postDeleteProfile = async (req, res, next) => {
+  const id = req.body.id;
+  if (id == req.session.user._id) {
+    try {
+      await adminService.deleteUserById(id);
+      const err = await req.session.destroy();
+      if (err) {
+        res.send('<h1>Nema sesije</h1>');
+      } else {
+        res.redirect('/');
       }
-      return bcrypt
-        .hash(password, 12)
-        .then(hashedPassword => {
-          const user = new User(email, hashedPassword);
-          return user
-            .save()
-            .then(() => {
-              let htmlCode =
-                '<html><head><title>Uspješna prijava</title></head><body><h1 style="font-family: Arial;">Uspješno ste se prijavili<br> Molimo vas kliknite na ovaj <a href="/login">Link</a> da se vratite na login formu</h1>';
-              return res.send(htmlCode);
-            })
-            .catch(err => console.log(err));
-        })
-        .catch(err => console.log(err));
-    });
+    } catch (err) {
+      console.log(err);
+    }
+  }
 };

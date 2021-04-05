@@ -57,6 +57,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.user = req.session.user ? req.session.user : false;
   next();
 });
 app.use((req, res, next) => {
@@ -80,7 +81,8 @@ app.use('/gifts', giftRoutes);
 app.use('/admin', adminRoutes);
 app.use(mainRoutes);
 app.use(errorController);
+const PORT = process.env.PORT || 3000;
 mongoConnect().then(() => {
-  app.listen(3000);
+  app.listen(PORT);
   console.log('Connected');
 });

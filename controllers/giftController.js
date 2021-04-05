@@ -1,17 +1,15 @@
-const path = require('path');
 const Gift = require('../models/gift');
 const fs = require('fs');
-const getDb = require('../util/database').getDb;
-const mongodb = require('mongodb');
-exports.getGifts = (req, res, next) => {
-  console.log(req.session.user);
-  Gift.fetchAll().then(gifts => {
-    res.render('gifts', {
-      pageTitle: 'Pokloni.ba | Lista poklona',
-      gifts: gifts,
-      path: '/gifts',
-      user: req.session.user ? req.session.user : { isAdmin: false }
-    });
+//
+const giftService = require('../service/giftService');
+
+exports.getGifts = async (req, res, next) => {
+  const gifts = await giftService.getGifts();
+  res.render('gifts', {
+    pageTitle: 'Pokloni.ba | Lista poklona',
+    gifts: gifts,
+    path: '/gifts',
+    user: req.session.user ? req.session.user : { isAdmin: false }
   });
 };
 
@@ -23,17 +21,13 @@ exports.getAddGift = (req, res, next) => {
   });
 };
 
-exports.postAddGift = (req, res, next) => {
+exports.postAddGift = async (req, res, next) => {
   const title = req.body.title;
   const image = req.file;
-  userId = req.session.user._id;
+  const userId = req.session.user._id;
   const description = req.body.description.toString().trim();
-  let gift;
-  if (!image) gift = new Gift(title, null, description, userId);
-  else gift = new Gift(title, image.path, description, userId);
-  gift.save().then(() => {
-    res.redirect('/gifts/list');
-  });
+  await giftService.addGift(title, description, userId, image);
+  res.redirect('/gifts/list');
 };
 
 exports.getEditGift = (req, res, next) => {
@@ -54,84 +48,51 @@ exports.getEditGift = (req, res, next) => {
   }
 };
 
-exports.postEditGift = (req, res, next) => {
+exports.postEditGift = async (req, res, next) => {
   const giftId = req.body.giftId;
   const title = req.body.title;
   const imageUrl = req.file;
-  let gift;
   const description = req.body.description.toString().trim();
-  if (!imageUrl)
-    gift = new Gift(title, null, description, req.session.user._id, giftId);
-  else
-    gift = new Gift(
-      title,
-      imageUrl.path,
-      description,
-      req.session.user._id,
-      giftId
-    );
-  Gift.findById(giftId)
-    .then(fetchedGift => {
-      if (
-        fetchedGift.userId.toString() == req.session.user._id.toString() ||
-        req.session.user.isAdmin
-      ) {
-        return gift.update();
-      } else {
-        return res.send('You can not edit this gift.');
-      }
-    })
-    .then(() => {
-      res.redirect('/gifts/my-gifts');
-    })
-    .catch(err => console.log(err));
+  try {
+    await giftService.postEditGift(req, giftId, title, description, imageUrl);
+    res.redirect('/gifts/my-gifts');
+  } catch (err) {
+    console.log(err);
+  }
 };
 
-exports.postDeleteGift = (req, res, next) => {
+exports.postDeleteGift = async (req, res, next) => {
   const giftId = req.body.giftId;
-  Gift.findById(giftId)
-    .then(gift => {
-      if (gift.imageUrl) {
-        fs.unlink(
-          path.join(__dirname, '../', 'images', gift.imageUrl.split('\\')[1]),
-          err => {
-            console.log(err);
-          }
-        );
-      }
-      if (
-        gift.userId.toString() === req.session.user._id.toString() ||
-        req.session.user.isAdmin
-      ) {
-        return Gift.deleteById(gift._id);
-      } else {
-        return res.send('This is not your gift nor youre an admin');
-      }
-    })
-    .then(() => {
-      console.log('Gift deleted');
-      res.redirect('/gifts/list');
-    })
-    .catch(err => console.log(err));
+  let gift = await Gift.findById(giftId);
+  if (
+    gift.userId.toString() === req.session.user._id.toString() ||
+    req.session.user.isAdmin
+  ) {
+    await Gift.deleteById(gift._id);
+    if (gift.imageUrl) {
+      fs.unlink(
+        path.join(__dirname, '../', 'images', gift.imageUrl.split('\\')[1]),
+        err => {
+          console.log(err);
+        }
+      );
+    }
+  } else {
+    return res.send("This is not your gift nor you're an admin");
+  }
+  res.redirect('/gifts/list');
 };
 
-exports.getMyGifts = (req, res, next) => {
-  console.log(req.session);
-  let db = getDb();
-  return db
-    .collection('pokloni')
-    .find({ userId: new mongodb.ObjectId(req.session.user._id) })
-    .toArray()
-    .then(myGifts => {
-      res.render('my-gifts', {
-        pageTitle: 'Pokloni.ba | Moji pokloni',
-        gifts: myGifts,
-        path: '/my-gifts'
-      });
-    });
+exports.getMyGifts = async (req, res, next) => {
+  let myGifts = await giftService.getMyGifts(req.session.user._id);
+  res.render('my-gifts', {
+    pageTitle: 'Pokloni.ba | Moji pokloni',
+    gifts: myGifts,
+    path: '/my-gifts'
+  });
 };
 
-exports.getOrderGift = (req, res, next) => {
+exports.getOrderGift = async (req, res, next) => {
   if (!req.session.user) {
     let htmlCode =
       '<html><head><title>Narudžba nije uspjela</title></head><body><h1 style="font-family: Arial;">Morate biti prijavljeni korisnik da biste naručili poklon.<br> Molimo vas kliknite na ovaj <a href="/login">Link</a></h1>';
@@ -142,11 +103,8 @@ exports.getOrderGift = (req, res, next) => {
     giftId: new mongodb.ObjectId(req.params.giftId),
     userId: req.session.user._id
   };
-  db.collection('orders')
-    .insertOne(order)
-    .then(() => {
-      let htmlCode =
-        '<html><head><title>Narudžba je uspjela</title></head><body><h1 style="font-family: Arial;">Uspješno ste poslali narudžbu.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
-      return res.send(htmlCode);
-    });
+  await db.collection('orders').insertOne(order);
+  let htmlCode =
+    '<html><head><title>Narudžba je uspjela</title></head><body><h1 style="font-family: Arial;">Uspješno ste poslali narudžbu.<br> Molimo vas kliknite na ovaj <a href="/">Link</a> da se vratite na početnu stranicu</h1>';
+  res.send(htmlCode);
 };

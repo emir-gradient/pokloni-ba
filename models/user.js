@@ -2,10 +2,13 @@ const mongodb = require('mongodb');
 const getDb = require('../util/database').getDb;
 
 class User {
-  constructor(email, password) {
+  constructor(name, lastName, email, password, joined) {
+    this.name = name;
+    this.lastName = lastName;
     this.email = email;
     this.password = password;
     this.isAdmin = false;
+    this.joined = joined;
   }
   save() {
     let db = getDb();
@@ -36,11 +39,8 @@ class User {
     return db
       .collection('users')
       .deleteOne({ _id: new mongodb.ObjectID(id) })
-      .then(() =>
-        console
-          .log('User has been deleted from the database')
-          .catch(err => console.log(err))
-      );
+      .then(() => console.log('User has been deleted from the database'))
+      .catch(err => console.log(err));
   }
 }
 
